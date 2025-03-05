@@ -8,7 +8,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { useParams, usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { getLanguageFullName } from '@/lib/utils';
 import { useBible } from './Provider';
 
@@ -17,16 +17,21 @@ export default function BibleLanguages({ setOpen }: { setOpen: (open: boolean) =
 
   const { locale } = useParams<{ locale: string }>();
   const pathname = usePathname();
-  const params = new URLSearchParams(location.search);
 
-  const [value, setValue] = useState(params.get('bibleLanguage') || locale);
+  const value = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('bibleLanguage') || locale;
+  }, [locale]);
 
-  const handleChange = (language: string) => {
-    params.set('bibleLanguage', language);
-    window.history.pushState(null, '', `${pathname}?${params.toString()}`);
-    setValue(language);
-    setOpen(false);
-  };
+  const handleChange = useCallback(
+    (language: string) => {
+      const params = new URLSearchParams(window.location.search);
+      params.set('bibleLanguage', language);
+      window.history.pushState(null, '', `${pathname}?${params.toString()}`);
+      setOpen(false);
+    },
+    [pathname, setOpen]
+  );
 
   const languages = [...new Set([...Object.values(translations).map(({ lang }) => lang)])];
   const languagesWithLabel = languages.map((language) => ({
